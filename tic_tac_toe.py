@@ -1,114 +1,164 @@
-from tkinter import *
-import tkinter.messagebox as msg
+"""
+Tic Tac Toe Game Module.
 
-# ------------------ BASIC INFO ------------------
-print("HELLO EVERYONE")
-print("My Name is Kalpit vora")
-print("PROJECT : TIC TAC TOE")
+This module implements a standard Tic Tac Toe game using Python's Tkinter library.
+It features a GUI with score tracking for two players.
+"""
 
-playerX_name = input("Enter Player X Name: ")
-playerO_name = input("Enter Player O Name: ")
+import tkinter as tk
+from tkinter import messagebox
 
-# ------------------ WINDOW ------------------
-window = Tk()
-window.title("TIC TAC TOE")
-window.geometry("600x500")
-window.config(bg="Cadet Blue")
+class TicTacToe:
+    """
+    Main game class that handles the GUI and game logic.
+    """
 
-# ------------------ VARIABLES ------------------
-current_player = "X"
-buttons = []
-playerX_score = IntVar(value=0)
-playerO_score = IntVar(value=0)
+    def __init__(self, root_window, p1_name, p2_name):
+        """
+        Initialize the game window and variables.
 
-# ------------------ FUNCTIONS ------------------
-def check_winner():
-    win_positions = [
-        (0,1,2),(3,4,5),(6,7,8),
-        (0,3,6),(1,4,7),(2,5,8),
-        (0,4,8),(2,4,6)
-    ]
+        Args:
+            root_window: The main Tkinter window.
+            p1_name (str): Name of Player X.
+            p2_name (str): Name of Player O.
+        """
+        self.root = root_window
+        self.root.title("TIC TAC TOE")
+        self.root.geometry("600x550")
+        self.root.config(bg="Cadet Blue")
 
-    for a,b,c in win_positions:
-        if buttons[a]["text"] == buttons[b]["text"] == buttons[c]["text"] != " ":
-            buttons[a].config(bg="yellow")
-            buttons[b].config(bg="yellow")
-            buttons[c].config(bg="yellow")
-            return buttons[a]["text"]
-    return None
+        # Game Variables
+        self.p1_name = p1_name
+        self.p2_name = p2_name
+        self.current_player = "X"
+        self.buttons = []
+        self.player_x_score = tk.IntVar(value=0)
+        self.player_o_score = tk.IntVar(value=0)
 
+        # Build UI
+        self.create_widgets()
+        
+        # Start Message
+        messagebox.showinfo("Game Info", "Game starts with Player X")
 
-def button_click(index):
-    global current_player
+    def create_widgets(self):
+        """Create all the labels, frames, and buttons for the GUI."""
+        # Title
+        tk.Label(self.root, text="TIC TAC TOE", font=("Arial", 30, "bold"),
+                 bg="Cadet Blue", fg="white").pack(pady=10)
 
-    if buttons[index]["text"] == " ":
-        buttons[index]["text"] = current_player
+        # Score Section
+        score_frame = tk.Frame(self.root, bg="Cadet Blue")
+        score_frame.pack()
 
-        winner = check_winner()
-        if winner:
-            if winner == "X":
-                playerX_score.set(playerX_score.get() + 1)
-                msg.showinfo("Winner", f"{playerX_name} wins!")
+        tk.Label(score_frame, text=f"Player X: {self.p1_name}",
+                 font=("Arial", 12), bg="Cadet Blue").grid(row=0, column=0)
+        tk.Entry(score_frame, textvariable=self.player_x_score, width=5).grid(row=0, column=1)
+
+        tk.Label(score_frame, text=f"Player O: {self.p2_name}",
+                 font=("Arial", 12), bg="Cadet Blue").grid(row=1, column=0)
+        tk.Entry(score_frame, textvariable=self.player_o_score, width=5).grid(row=1, column=1)
+
+        # Game Board Area
+        board_frame = tk.Frame(self.root)
+        board_frame.pack(pady=20)
+
+        # Create 9 Buttons
+        for i in range(9):
+            btn = tk.Button(
+                board_frame, text=" ", font=("Arial", 20, "bold"),
+                width=5, height=2, bg="gainsboro",
+                command=lambda index=i: self.on_button_click(index)
+            )
+            btn.grid(row=i // 3, column=i % 3)
+            self.buttons.append(btn)
+
+        # Control Buttons
+        control_frame = tk.Frame(self.root, bg="Cadet Blue")
+        control_frame.pack(pady=10)
+
+        tk.Button(control_frame, text="RESET ROUND", width=15,
+                  command=self.reset_board).grid(row=0, column=0, padx=5)
+        tk.Button(control_frame, text="NEW GAME", width=15,
+                  command=self.new_game).grid(row=0, column=1, padx=5)
+        tk.Button(control_frame, text="QUIT", width=15,
+                  command=self.root.destroy).grid(row=0, column=2, padx=5)
+
+    def check_winner(self):
+        """
+        Check the board for a winning combination.
+        Returns 'X', 'O', or None.
+        """
+        win_positions = [
+            (0, 1, 2), (3, 4, 5), (6, 7, 8),  # Rows
+            (0, 3, 6), (1, 4, 7), (2, 5, 8),  # Columns
+            (0, 4, 8), (2, 4, 6)              # Diagonals
+        ]
+
+        for a, b, c in win_positions:
+            btn_a = self.buttons[a]
+            btn_b = self.buttons[b]
+            btn_c = self.buttons[c]
+
+            if btn_a["text"] == btn_b["text"] == btn_c["text"] != " ":
+                btn_a.config(bg="yellow")
+                btn_b.config(bg="yellow")
+                btn_c.config(bg="yellow")
+                return btn_a["text"]
+        return None
+
+    def on_button_click(self, index):
+        """
+        Handle a click on the game board.
+
+        Args:
+            index (int): The index (0-8) of the button clicked.
+        """
+        if self.buttons[index]["text"] == " ":
+            self.buttons[index]["text"] = self.current_player
+
+            winner = self.check_winner()
+            if winner:
+                if winner == "X":
+                    current_score = self.player_x_score.get()
+                    self.player_x_score.set(current_score + 1)
+                    messagebox.showinfo("Winner", f"{self.p1_name} wins!")
+                else:
+                    current_score = self.player_o_score.get()
+                    self.player_o_score.set(current_score + 1)
+                    messagebox.showinfo("Winner", f"{self.p2_name} wins!")
+                self.reset_board()
+            elif " " not in [btn["text"] for btn in self.buttons]:
+                messagebox.showinfo("Draw", "It's a Tie!")
+                self.reset_board()
             else:
-                playerO_score.set(playerO_score.get() + 1)
-                msg.showinfo("Winner", f"{playerO_name} wins!")
-            reset_board()
-        else:
-            current_player = "O" if current_player == "X" else "X"
+                # Switch Player
+                self.current_player = "O" if self.current_player == "X" else "X"
+
+    def reset_board(self):
+        """Clear the board for a new round but keep scores."""
+        self.current_player = "X"
+        for btn in self.buttons:
+            btn.config(text=" ", bg="gainsboro")
+
+    def new_game(self):
+        """Reset scores and the board for a completely new game."""
+        self.player_x_score.set(0)
+        self.player_o_score.set(0)
+        self.reset_board()
 
 
-def reset_board():
-    global current_player
-    current_player = "X"
-    for btn in buttons:
-        btn.config(text=" ", bg="gainsboro")
+if __name__ == "__main__":
+    # Console Inputs
+    print("------------------ BASIC INFO ------------------")
+    print("HELLO EVERYONE")
+    print("PROJECT : TIC TAC TOE")
+    
+    # Using 'input' inside the main block ensures it runs only when executed directly
+    name_x = input("Enter Player X Name: ")
+    name_o = input("Enter Player O Name: ")
 
-
-def new_game():
-    playerX_score.set(0)
-    playerO_score.set(0)
-    reset_board()
-
-
-def quit_game():
-    window.destroy()
-
-# ------------------ UI ------------------
-Label(window, text="TIC TAC TOE", font=("Arial", 30, "bold"),
-      bg="Cadet Blue", fg="white").pack(pady=10)
-
-score_frame = Frame(window, bg="Cadet Blue")
-score_frame.pack()
-
-Label(score_frame, text=f"Player X: {playerX_name}",
-      font=("Arial", 12), bg="Cadet Blue").grid(row=0, column=0)
-Entry(score_frame, textvariable=playerX_score, width=5).grid(row=0, column=1)
-
-Label(score_frame, text=f"Player O: {playerO_name}",
-      font=("Arial", 12), bg="Cadet Blue").grid(row=1, column=0)
-Entry(score_frame, textvariable=playerO_score, width=5).grid(row=1, column=1)
-
-board = Frame(window)
-board.pack(pady=20)
-
-# ------------------ GAME BUTTONS ------------------
-for i in range(9):
-    btn = Button(
-        board, text=" ", font=("Arial", 20, "bold"),
-        width=5, height=2, bg="gainsboro",
-        command=lambda i=i: button_click(i)
-    )
-    btn.grid(row=i//3, column=i%3)
-    buttons.append(btn)
-
-# ------------------ CONTROL BUTTONS ------------------
-control = Frame(window, bg="Cadet Blue")
-control.pack(pady=10)
-
-Button(control, text="RESET ROUND", width=15, command=reset_board).grid(row=0, column=0, padx=5)
-Button(control, text="NEW GAME", width=15, command=new_game).grid(row=0, column=1, padx=5)
-Button(control, text="QUIT", width=15, command=quit_game).grid(row=0, column=2, padx=5)
-
-# ------------------ START ------------------
-msg.showinfo("Game Info", "Game starts with Player X")
-window.mainloop()
+    # Window Setup
+    root = tk.Tk()
+    app = TicTacToe(root, name_x, name_o)
+    root.mainloop()
